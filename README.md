@@ -1,2 +1,2 @@
 # ToolboxCI
-Scripts and components used between MATLAB toolboxes
+Common tools used for CI management of MATLAB toolboxes
