@@ -35,17 +35,7 @@ close_project
 
 if {$fpga_board eq "ZCU102"} {
     exec hsi -source $cdir/projects/scripts/pmufw_zynqmp.tcl
-    file copy -force $cdir/projects/scripts/fixmake.sh $cdir/fixmake.sh
-    exec chmod +x fixmake.sh
 
-    #exec ./fixmake.sh
-    #cd pmufw
-    #exec make
-    #cd ..
-    if [catch "exec -ignorestderr ./fixmake.sh" ret opt] {
-        set makeRet [lindex [dict get $opt -errorcode] end]
-        puts "make returned with $makeRet"
-    }
     if {[file exist pmufw/executable.elf] eq 0} {
         puts "ERROR: pmufw not built"
         return -code error 10
