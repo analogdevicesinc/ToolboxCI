@@ -10,6 +10,7 @@ parts = strsplit(mfilename('fullpath'),filesep);
 tbroot = strjoin(parts(1:end-3),filesep);
 cd(tbroot);
 v = adi.Version;
+uuid = matlab.lang.internal.uuid;
 cd(cwd);
 
 %%
@@ -27,6 +28,7 @@ f = strrep(f,'__VERSION__',v.Release);
 f = strrep(f,'__ML-RELEASE__',v.MATLAB);
 f = strrep(f,'__APP-NAME__',v.AppName);
 f = strrep(f,'__EXAMPLES-DIR__',v.ExamplesDir);
+f = strrep(f,'__UUID__',uuid);
 
 fid  = fopen('../../bsp.prj','w');
 fprintf(fid,'%s',f);
