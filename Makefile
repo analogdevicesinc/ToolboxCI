@@ -93,7 +93,7 @@ test_streaming:
 
 run_NonHWTests:
 	cd ../.. ; \
-        ${MLPATH}/$(MLRELEASE)/bin/matlab $(MLFLAGS) -r "addpath(genpath('test'));NonHWTest;"
+        ${MLPATH}/$(MLRELEASE)/bin/matlab $(MLFLAGS) -r "addpath(genpath('test'));runNonHWTest;"
 
 test_evm:
 	cd ../.. ; \
