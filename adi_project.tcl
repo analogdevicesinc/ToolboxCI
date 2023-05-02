@@ -7,7 +7,7 @@ variable p_prcfg_list
 variable p_prcfg_status
 
 if {![info exists REQUIRED_VIVADO_VERSION]} {
-  set REQUIRED_VIVADO_VERSION "2018.2"
+  set REQUIRED_VIVADO_VERSION "2022.2"
 }
 
 if {[info exists ::env(ADI_IGNORE_VERSION_CHECK)]} {

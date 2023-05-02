@@ -2,9 +2,8 @@
 set -x
 
 if [ -z "${HDLBRANCH}" ]; then
-HDLBRANCH='hdl_2018_r2'
+HDLBRANCH='master'
 fi
-
 
 # Script is designed to run from specific location
 scriptdir=`dirname "$BASH_SOURCE"`
@@ -15,10 +14,16 @@ cd ..
 if [ -d "hdl" ]; then
     rm -rf "hdl"
 fi
-if ! git clone --single-branch -b $HDLBRANCH https://github.com/analogdevicesinc/hdl.git
-then
-   exit 1
-fi
+for i in {1..5}
+do
+	if git clone --single-branch -b $HDLBRANCH https://github.com/analogdevicesinc/hdl.git
+	then
+	   break
+	fi
+	if [ -d "hdl" ]; then
+	   break
+	fi
+done
 if [ ! -d "hdl" ]; then
    echo "HDL clone failed"
    exit 1
@@ -30,7 +35,7 @@ if [ -f "hdl/library/scripts/adi_ip.tcl" ]; then
 else
 	TARGET="hdl/library/scripts/adi_ip_xilinx.tcl"
 fi
-VER=$(awk '/set REQUIRED_VIVADO_VERSION/ {print $3}' $TARGET | sed 's/"//g')
+VER=$(awk '/set required_vivado_version/ {print $3}' $TARGET | sed 's/"//g')
 echo "Required Vivado version ${VER}"
 VIVADOFULL=${VER}
 if [ ${#VER} = 8 ]
@@ -42,20 +47,10 @@ VIVADO=${VER}
 # Setup
 source /opt/Xilinx/Vivado/$VIVADO/settings64.sh
 
-# Update build scripts and force vivado versions
-cp scripts/adi_ip.tcl hdl/library/scripts/
-VERTMP=$(awk '/set REQUIRED_VIVADO_VERSION/ {print $3}' hdl/library/scripts/adi_ip.tcl | sed 's/"//g')
-grep -rl ${VERTMP} hdl/library/scripts | xargs sed -i -e "s/${VERTMP}/${VIVADOFULL}/g"
-
-# Update relative paths
-FILES=$(grep -lrnw hdl/projects -e "\.\.\/common" | grep -v Makefile)
-for f in $FILES
-do
-  echo "Updating relative paths of: $f"
-  DEVICE=$(echo "$f"| cut -d "/" -f 3)
-  STR="\$ad_hdl_dir\/projects\/$DEVICE"
-  sed -i "s/\.\.\/common/$STR\/common/g" "$f"
-done
+# Pre-build IP library
+# cd hdl/library
+# make
+# cd ../..
 
 # Rename .prj files since MATLAB ignores then during packaging
 FILES=$(grep -lrn hdl/projects/common -e '.prj' | grep -v Makefile | grep -v .git)
@@ -72,75 +67,34 @@ do
   mv "$f" "$DEST"
 done
 
-
-
-# Pack IP cores
-echo "Starting IP core packaging"
-vivado -verbose -mode batch -source scripts/pack_all_ips.tcl > /dev/null 2>&1
-
-# Repack i2s and i2c cores to include xml files
-cd hdl/library/axi_i2s_adi/
-unzip analog.com_user_axi_i2s_adi_1.0.zip -d tmp
-rm analog.com_user_axi_i2s_adi_1.0.zip
-ls
-cp *.xml tmp/
-cd tmp
-zip -r analog.com_user_axi_i2s_adi_1.0.zip *
-cp analog.com_user_axi_i2s_adi_1.0.zip ../
-cd ../../../..
-
-cd hdl/library/util_i2c_mixer/
-unzip analog.com_user_util_i2c_mixer_1.0.zip -d tmp/
-rm analog.com_user_util_i2c_mixer_1.0.zip
-cp *.xml tmp/
-cd tmp
-zip -r analog.com_user_util_i2c_mixer_1.0.zip *
-cp analog.com_user_util_i2c_mixer_1.0.zip ../
-cd ../../../..
-
-
-# Move all cores
-echo "Moving all cores"
-vivado -mode batch -source scripts/copy_all_packed_ips.tcl || true
-
-cp -r hdl/library/jesd204/*.zip hdl/library/
-cp -r hdl/library/xilinx/*.zip hdl/library/
-cp -r hdl/projects/common common
-cp -r hdl/projects/scripts/adi_board.tcl .
-
-mv hdl/projects projects_premerge
-cp -r projects hdl/
-cp -R projects_premerge/* hdl/projects/
-rm -rf projects_premerge
-
-cp -R common/* hdl/projects/common/
-rm -rf common
-mv adi_board.tcl hdl/projects/scripts/
-
-# Update tcl scripts and additional IP cores (MUX)
-cp scripts/adi_project.tcl hdl/projects/scripts/
-cp scripts/adi_build.tcl hdl/projects/scripts/
-cp ip/*.zip hdl/library/
-
-# Update vivado version in MATLAB API and build script
-DEFAULT_V_VERSION='2017.4'
-cd ..
-echo "SED 1"
-grep -rl ${DEFAULT_V_VERSION} hdl/vendor/AnalogDevices/+AnalogDevices | grep -v MODEM | xargs sed -i "s/${DEFAULT_V_VERSION}/$VIVADO/g"
-cd CI
-echo "SED 2"
-grep -rl ${DEFAULT_V_VERSION} hdl/projects/scripts | xargs sed -i "s/${DEFAULT_V_VERSION}/$VIVADOFULL/g"
-
 # Remove git directory move to bsp folder
 rm -fr hdl/.git*
 TARGET="../hdl/vendor/AnalogDevices/vivado"
 if [ -d "$TARGET" ]; then
     rm -rf "$TARGET"
 fi
-cp -r hdl $TARGET
+# Increase rx_clk period to fix timing failures for Pluto designs in R2021b
+sed -i 's/16.27/30/' hdl/projects/pluto/system_constr.xdc
+mv hdl $TARGET
 
-# Cleanup
-rm vivado_*
-rm vivado.jou
-rm vivado.log
-rm -rf hdl
+# Post-process ports.json
+cp ./scripts_hdl/ports.json ./
+python3 ./scripts/read_ports_json.py
+cp ports.json ../hdl/vendor/AnalogDevices/+AnalogDevices/
+
+# Updates
+cp scripts_hdl/matlab_processors.tcl ../hdl/vendor/AnalogDevices/vivado/projects/scripts/matlab_processors.tcl
+cp scripts/system_project_rxtx.tcl ../hdl/vendor/AnalogDevices/vivado/projects/scripts/system_project_rxtx.tcl
+cp scripts/adi_build.tcl ../hdl/vendor/AnalogDevices/vivado/projects/scripts/adi_build.tcl
+
+# Copy fsbl files
+cp scripts/fsbl_build_zynq.tcl ../hdl/vendor/AnalogDevices/vivado/projects/scripts/fsbl_build_zynq.tcl
+cp scripts/fsbl_build_zynqmp.tcl ../hdl/vendor/AnalogDevices/vivado/projects/scripts/fsbl_build_zynqmp.tcl
+cp scripts/pmufw_zynqmp.tcl  ../hdl/vendor/AnalogDevices/vivado/projects/scripts/pmufw_zynqmp.tcl
+cp scripts/fixmake.sh  ../hdl/vendor/AnalogDevices/vivado/projects/scripts/fixmake.sh
+
+# Copy boot files
+mkdir ../hdl/vendor/AnalogDevices/vivado/projects/common/boot/
+cp -r scripts/boot/* ../hdl/vendor/AnalogDevices/vivado/projects/common/boot/
+
+echo 'puts "Skipping"' > ../hdl/vendor/AnalogDevices/vivado/library/axi_ad9361/axi_ad9361_delay.tcl
