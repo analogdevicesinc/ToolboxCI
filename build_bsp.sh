@@ -87,12 +87,6 @@ cp scripts_hdl/matlab_processors.tcl ../hdl/vendor/AnalogDevices/vivado/projects
 cp scripts/system_project_rxtx.tcl ../hdl/vendor/AnalogDevices/vivado/projects/scripts/system_project_rxtx.tcl
 cp scripts/adi_build.tcl ../hdl/vendor/AnalogDevices/vivado/projects/scripts/adi_build.tcl
 
-# Copy fsbl files
-cp scripts/fsbl_build_zynq.tcl ../hdl/vendor/AnalogDevices/vivado/projects/scripts/fsbl_build_zynq.tcl
-cp scripts/fsbl_build_zynqmp.tcl ../hdl/vendor/AnalogDevices/vivado/projects/scripts/fsbl_build_zynqmp.tcl
-cp scripts/pmufw_zynqmp.tcl  ../hdl/vendor/AnalogDevices/vivado/projects/scripts/pmufw_zynqmp.tcl
-cp scripts/fixmake.sh  ../hdl/vendor/AnalogDevices/vivado/projects/scripts/fixmake.sh
-
 # Copy boot files
 mkdir ../hdl/vendor/AnalogDevices/vivado/projects/common/boot/
 cp -r scripts/boot/* ../hdl/vendor/AnalogDevices/vivado/projects/common/boot/
