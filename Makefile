@@ -8,11 +8,11 @@ SHELL := /bin/bash
 MLFLAGS := -nodisplay -nodesktop -nosplash
 
 ifeq ($(MLRELEASE),)
-MLRELEASE := R2021a
+MLRELEASE := R2022a
 endif
 
 ifeq ($(HDLBRANCH),)
-HDLBRANCH := hdl_2018_r2
+HDLBRANCH := master
 endif
 
 ifeq ($(OS),Windows_NT)
@@ -69,7 +69,7 @@ add_libad9361:
 	cd .. ; \
 	mkdir win ; \
 	cd win ; \
-	wget "https://ci.appveyor.com/api/projects/analogdevicesinc/libad9361-iio/artifacts/libad9361-win64.zip?branch=master" -O lib.zip ; \
+	wget "https://github.com/analogdevicesinc/libad9361-iio/releases/download/v0.2/libad9361-0.2-win64.zip" -O lib.zip ; \
 	unzip lib.zip ; \
 	mv libad9361-win64/* . ; \
 	rm -rf libad9361-win64 ; \
@@ -104,10 +104,7 @@ test_modem:
 	${MLPATH}/$(MLRELEASE)/bin/matlab $(MLFLAGS) -r "addpath(genpath('hdl'));cd('targeting');addpath(genpath('modem-qpsk'))"
 
 test_synth:
-	bash synth_designs.sh
-
-test_targeting_demos:
-	bash targeting_designs.sh
+	bash synth_designs.sh $(BOARD)
 
 gen_tlbx:
 	${MLPATH}/$(MLRELEASE)/bin/matlab $(MLFLAGS) -r "genTlbx($(INCLUDE_EXAMPLES));exit();"
