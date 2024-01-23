@@ -1,5 +1,5 @@
 set start_dir [pwd]
-puts "Starting High-Speed Converter Toolbox HDL build"
+puts "Starting Toolbox HDL build"
 
 if {$preprocess == "on"} {
     source $preprocess_script
