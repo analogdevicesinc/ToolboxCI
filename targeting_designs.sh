@@ -4,7 +4,7 @@ MLFLAGS="-nodisplay -nodesktop -nosplash"
 
 if [ -z "$MLRELEASE" ]
 then
-	MLRELEASE=R2022a
+	MLRELEASE=R2023b
 fi
 if [ -z "$DEMO" ]
 then
@@ -12,13 +12,13 @@ then
 fi
 echo "Testing demo: $DEMO"
 
-MLPATH=/usr/local/MATLAB
+MLPATH=/emea/mediadata/opt/MATLAB
 
-cd ../.. 
-source /opt/Xilinx/Vivado/2022.2/settings64.sh
+cd ../..
+source /emea/mediadata/opt/Xilinx/Vivado/2023.2/settings64.sh
 Xvfb :77 &
 export DISPLAY=:77
 export SWT_GTK3=0
-source /opt/Xilinx/Vivado/2022.2/settings64.sh
+source /emea/mediadata/opt/Xilinx/Vivado/2023.2/settings64.sh
 $MLPATH/$MLRELEASE/bin/matlab $MLFLAGS -r "addpath(genpath('test'));addpath(genpath('deps'));runDemoTests('$DEMO');"
 kill -9 `pidof Xvfb`

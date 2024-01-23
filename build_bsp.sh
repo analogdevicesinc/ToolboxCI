@@ -2,7 +2,7 @@
 set -x
 
 if [ -z "${HDLBRANCH}" ]; then
-HDLBRANCH='master'
+HDLBRANCH='main'
 fi
 
 # Script is designed to run from specific location
@@ -45,7 +45,7 @@ fi
 VIVADO=${VER}
 
 # Setup
-source /opt/Xilinx/Vivado/$VIVADO/settings64.sh
+source /emea/mediadata/opt/Xilinx/Vivado/$VIVADO/settings64.sh
 
 # Pre-build IP library
 # cd hdl/library
