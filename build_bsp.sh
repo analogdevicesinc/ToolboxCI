@@ -45,7 +45,7 @@ fi
 VIVADO=${VER}
 
 # Setup
-source /emea/mediadata/opt/Xilinx/Vivado/$VIVADO/settings64.sh
+source "$vivado_settings_path"
 
 # Pre-build IP library
 # cd hdl/library
