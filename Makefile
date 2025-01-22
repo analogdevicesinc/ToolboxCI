@@ -7,29 +7,40 @@ SHELL := /bin/bash
 
 MLFLAGS := -nodisplay -nodesktop -nosplash
 
+# Source env_config.sh and extract variables
+ifneq ($(wildcard ./env_config.sh),)
+    include_env := $(shell source ./env_config.sh && echo $$req_matlab_v $$req_vivado_v $$vivado_settings_path $$matlab_path_linux $$matlab_path_windows)
+    req_matlab_v := $(word 1, $(include_env))
+    req_vivado_v := $(word 2, $(include_env))
+    vivado_settings_path := $(word 3, $(include_env))
+    matlab_path_linux := $(word 4, $(include_env))
+    matlab_path_windows := $(word 5, $(include_env))
+endif
+
 ifeq ($(MLRELEASE),)
-MLRELEASE := R2023b
+MLRELEASE := $(req_matlab_v)
 endif
 
 ifeq ($(VIVADORELEASE),)
-VIVADORELEASE := 2023.2
+VIVADORELEASE := $(req_vivado_v)
 endif
 
 ifeq ($(HDLBRANCH),)
 HDLBRANCH := master
 endif
 
+# Determine MATLAB path based on OS
 ifeq ($(OS),Windows_NT)
-MLPATH := /cygdrive/c/Program\ Files/MATLAB
-MLFLAGS := $(MLFLAGS) -wait
+MLPATH := $(matlab_path_windows)
+MLFLAGS := -nodisplay -nodesktop -nosplash -wait
 else
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Linux)
-MLPATH := /usr/local/MATLAB
+MLPATH := $(matlab_path_linux)
 endif
 ifeq ($(UNAME_S),Darwin)
 MLPATH := /Applications
-MLRELEASE := MATLAB_${MLRELEASE}.app
+MLRELEASE := MATLAB_$(req_matlab_v).app
 endif
 endif
 
